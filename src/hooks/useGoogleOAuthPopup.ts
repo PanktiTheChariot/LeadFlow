@@ -5,6 +5,12 @@ import { OAUTH_MESSAGE_TYPE } from "@/lib/oauth/constants";
 
 type OAuthIntent = "login" | "signup";
 
+interface OAuthSuccessData {
+  needsCompanyName?: boolean;
+  name?: string;
+  email?: string;
+}
+
 /** Centers a popup window the way most "Sign in with X" flows do, accounting for multi-monitor setups. */
 function openCenteredPopup(url: string, name: string, width: number, height: number): Window | null {
   const left = (window.screenX ?? 0) + Math.max(0, (window.outerWidth - width) / 2);
@@ -21,15 +27,15 @@ function openCenteredPopup(url: string, name: string, width: number, height: num
  * popup instead of navigating the current tab away, and resolves once the
  * callback bridge page posts a result back (see the callback route's
  * `bridgeResponse`). `intent` decides what the backend does when no existing
- * user matches the Google account: "login" fails, "signup" provisions a new
- * company.
+ * user matches the Google account: "login" fails, "signup" reports back
+ * `needsCompanyName` instead of provisioning anything by itself.
  */
 export function useGoogleOAuthPopup() {
   const [isLoading, setIsLoading] = useState(false);
 
   function start(
     intent: OAuthIntent,
-    handlers: { onSuccess: () => void; onError: (code: string) => void },
+    handlers: { onSuccess: (data: OAuthSuccessData) => void; onError: (code: string) => void },
   ) {
     const popup = openCenteredPopup(
       `/api/auth/oauth/google/start?intent=${intent}`,
@@ -54,8 +60,15 @@ export function useGoogleOAuthPopup() {
       if (event.origin !== window.location.origin) return;
       if (event.data?.type !== OAUTH_MESSAGE_TYPE) return;
       cleanup();
-      if (event.data.ok) handlers.onSuccess();
-      else handlers.onError(event.data.error);
+      if (event.data.ok) {
+        handlers.onSuccess({
+          needsCompanyName: event.data.needsCompanyName,
+          name: event.data.name,
+          email: event.data.email,
+        });
+      } else {
+        handlers.onError(event.data.error);
+      }
     }
 
     window.addEventListener("message", handleMessage);

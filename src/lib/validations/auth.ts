@@ -19,3 +19,11 @@ export const signupSchema = z
   .strict();
 
 export type SignupInput = z.infer<typeof signupSchema>;
+
+export const completeGoogleSignupSchema = z
+  .object({
+    companyName: z.string().trim().min(2, "Company name is required").max(150),
+  })
+  .strict();
+
+export type CompleteGoogleSignupInput = z.infer<typeof completeGoogleSignupSchema>;

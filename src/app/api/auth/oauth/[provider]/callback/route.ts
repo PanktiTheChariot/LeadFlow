@@ -2,12 +2,18 @@ import { NextResponse, type NextRequest } from "next/server";
 import { connectToDatabase } from "@/lib/db/connect";
 import { getOAuthProvider, isOAuthProviderId } from "@/lib/oauth/providers";
 import { OAUTH_COOKIE_NAME, verifyOAuthState } from "@/lib/auth/oauthState";
+import { PENDING_SIGNUP_COOKIE_NAME, PENDING_SIGNUP_TTL_SECONDS, signPendingSignup } from "@/lib/auth/pendingSignup";
 import { createSessionCookie } from "@/lib/auth/session";
 import { OAUTH_MESSAGE_TYPE } from "@/lib/oauth/constants";
-import { buildSessionFromUser, signUpWithGoogle } from "@/server/services/authService";
+import { buildSessionFromUser } from "@/server/services/authService";
 import { User } from "@/models/User";
 
 type RouteContext = { params: Promise<{ provider: string }> };
+
+type BridgeResult =
+  | { ok: true }
+  | { ok: true; needsCompanyName: true; name: string; email: string }
+  | { ok: false; error: string };
 
 /**
  * Renders a tiny bridge page instead of redirecting the window. When opened
@@ -16,9 +22,13 @@ type RouteContext = { params: Promise<{ provider: string }> };
  * there's no opener (direct visit, popup blocked and opened as a normal
  * tab instead), it falls back to a plain redirect so the flow still works.
  */
-function bridgeResponse(request: NextRequest, result: { ok: true } | { ok: false; error: string }): NextResponse {
+function bridgeResponse(request: NextRequest, result: BridgeResult): NextResponse {
   const appUrl = process.env.NEXT_PUBLIC_APP_URL ?? request.nextUrl.origin;
-  const fallbackUrl = result.ok ? "/dashboard" : `/login?error=${encodeURIComponent(result.error)}`;
+  const fallbackUrl = !result.ok
+    ? `/login?error=${encodeURIComponent(result.error)}`
+    : "needsCompanyName" in result
+      ? "/signup"
+      : "/dashboard";
   const payload = JSON.stringify({ type: OAUTH_MESSAGE_TYPE, ...result });
 
   const html = `<!DOCTYPE html>
@@ -135,22 +145,38 @@ export async function GET(request: NextRequest, { params }: RouteContext) {
 
   // If an account already exists for this email, Google just proves identity
   // and logs them into it - regardless of whether the button said "sign in"
-  // or "sign up". Only when there's truly no account AND the intent was
-  // signup do we provision a brand-new company; a login-intent miss still
-  // fails, matching the "an admin must invite you" trust boundary.
-  const session = existingUser
-    ? await buildSessionFromUser(existingUser)
-    : statePayload.intent === "signup"
-      ? await signUpWithGoogle({ name: profile.name ?? email.split("@")[0], email })
-      : null;
-
-  if (!session) {
-    return bridgeResponse(request, { ok: false, error: existingUser ? "oauth_failed" : "oauth_no_account" });
+  // or "sign up".
+  if (existingUser) {
+    const session = await buildSessionFromUser(existingUser);
+    if (!session) {
+      return bridgeResponse(request, { ok: false, error: "oauth_failed" });
+    }
+    // Sets the same leadflow_session cookie password login sets - from here
+    // on, OAuth- and password-authenticated sessions are indistinguishable.
+    await createSessionCookie(session.ctx);
+    return bridgeResponse(request, { ok: true });
   }
 
-  // Sets the same leadflow_session cookie password login sets - from here on,
-  // OAuth-authenticated and password-authenticated sessions are indistinguishable.
-  await createSessionCookie(session.ctx);
+  // No account, and this was a "sign in" attempt, not "sign up" - matches the
+  // "an admin must invite you" trust boundary; no self-serve provisioning.
+  if (statePayload.intent !== "signup") {
+    return bridgeResponse(request, { ok: false, error: "oauth_no_account" });
+  }
 
-  return bridgeResponse(request, { ok: true });
+  // No account, but intent is signup: identity is verified, but there's no
+  // company name yet - Google never provides one. Stash the verified
+  // {email, name} in a short-lived token and hand control back to the
+  // opener to collect it, rather than guessing a name like "X's Company".
+  const name = profile.name ?? email.split("@")[0];
+  const pendingToken = await signPendingSignup({ email, name });
+
+  const response = bridgeResponse(request, { ok: true, needsCompanyName: true, name, email });
+  response.cookies.set(PENDING_SIGNUP_COOKIE_NAME, pendingToken, {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "lax",
+    path: "/",
+    maxAge: PENDING_SIGNUP_TTL_SECONDS,
+  });
+  return response;
 }

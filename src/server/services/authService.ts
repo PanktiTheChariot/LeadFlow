@@ -124,21 +124,32 @@ export async function signUp(
 }
 
 /**
- * Google-signup counterpart of `signUp` - used only when the OAuth callback
- * was reached with signup intent and no existing user matched the verified
- * email. Always creates a brand-new company (never joins/guesses an existing
- * one from the email domain) with the Google account as its admin. There's
- * no password step in this flow, so a random, never-revealed password hash
- * is stored just to satisfy the schema; the account can only ever sign in
- * via Google afterward.
+ * Google-signup counterpart of `signUp` - the OAuth callback verifies
+ * identity (email, name) and stashes it in a short-lived pending-signup
+ * token; this runs once the user submits the company name that token can't
+ * provide on its own. Always creates a brand-new company (never joins/guesses
+ * an existing one from the email domain) with the Google account as its
+ * admin. There's no password step in this flow, so a random, never-revealed
+ * password hash is stored just to satisfy the schema; the account can only
+ * ever sign in via Google afterward.
  */
-export async function signUpWithGoogle(input: {
+export async function completeGoogleSignup(input: {
   name: string;
   email: string;
+  companyName: string;
 }): Promise<{ ctx: AuthContext; sessionUser: SessionUser }> {
+  const existing = await User.findOne({ email: input.email });
+  if (existing) {
+    throw new HttpError(409, "An account with this email already exists");
+  }
+
   const passwordHash = await hashPassword(randomBytes(32).toString("hex"));
-  const companyName = `${input.name.split(" ")[0] || "New"}'s Company`;
-  return provisionCompanyWithAdmin({ companyName, name: input.name, email: input.email, passwordHash });
+  return provisionCompanyWithAdmin({
+    companyName: input.companyName,
+    name: input.name,
+    email: input.email,
+    passwordHash,
+  });
 }
 
 /** Builds the ctx/sessionUser pair for an already-resolved user + their company - shared by the two OAuth outcomes. */
