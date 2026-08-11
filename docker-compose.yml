@@ -1,0 +1,22 @@
+services:
+  mongodb:
+    image: mongo:7
+    container_name: leadflow-mongodb
+    restart: unless-stopped
+    ports:
+      - "27017:27017"
+    volumes:
+      - leadflow-mongo-data:/data/db
+
+  redis:
+    image: redis:7-alpine
+    container_name: leadflow-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - leadflow-redis-data:/data
+
+volumes:
+  leadflow-mongo-data:
+  leadflow-redis-data:

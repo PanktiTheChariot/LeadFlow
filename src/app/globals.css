@@ -1,0 +1,154 @@
+@import "tailwindcss";
+
+:root {
+  /* Base neutrals. */
+  --color-paper: #f7f6f2;
+  --color-surface: #ffffff;
+  --color-ink: #25272b;
+  --color-ink-soft: #73777f;
+  --color-ink-faint: #9a9d9f;
+  --color-border: #e4e3de;
+  --color-border-strong: #d5d3cc;
+
+  /* Primary/brand: deep ink. Used for primary buttons, links, focus states,
+     and the sidebar's active nav item - the "serious" anchor color. */
+  --color-accent: #20242b;
+  --color-accent-hover: #14171c;
+  --color-accent-soft: #e7e6e2;
+  --color-accent-pastel: #ecd8ab;
+
+  /* Secondary accent: saffron. Used more sparingly - the logo mark, the
+     "New" stat icon, and warning states - so it reads as a highlight
+     against the ink brand color rather than competing with it. */
+  --color-saffron: #2E6F40;
+  --color-saffron-hover: #b8811f;
+  --color-saffron-soft: #f6e6c4;
+
+  /* Neutral badge circle shared by every stat card - only the icon glyph
+     and tick color vary per metric, per the "don't give every card a
+     different pastel background" direction. */
+  --color-badge-neutral: #eeece5;
+
+  --color-mint: #6faf91;
+  --color-mint-soft: #e1f0e8;
+
+  --color-brick: #c9675b;
+  --color-brick-soft: #f7e2df;
+
+  --color-success: #6faf91;
+  --color-success-soft: #e1f0e8;
+
+  --color-danger: #c9675b;
+  --color-danger-soft: #f7e2df;
+
+  /* Status hues: validated as an ordered set for CVD-safe adjacency (worst
+     adjacent pair passes both protan/deutan and normal-vision floors) - see
+     dataviz skill validation. Do not reorder or recolor independently. */
+  --color-status-new: #1f5fac;
+  --color-status-new-soft: #dce8f9;
+  --color-status-new-chart: #2a78d6;
+  --color-status-contacted: #b8501f;
+  --color-status-contacted-soft: #fbe3d6;
+  --color-status-contacted-chart: #eb6834;
+  --color-status-qualified: #0f7a55;
+  --color-status-qualified-soft: #d8f2e7;
+  --color-status-qualified-chart: #1baf7a;
+  --color-status-converted: #006300;
+  --color-status-converted-soft: #dcefdc;
+  --color-status-converted-chart: #008300;
+  --color-status-lost: #b23030;
+  --color-status-lost-soft: #fbdcdc;
+  --color-status-lost-chart: #e34948;
+
+  /* Bar-fill variants for the "Leads by status" chart, drawn from the same
+     four theme colors (ink/saffron/mint/brick) rather than an unrelated
+     blue/orange/teal/green/red set, so the chart reads as part of the same
+     system as the stat cards and sidebar. Every bar already carries a text
+     label and count, so hue here is reinforcement, not the sole identifier. */
+  --color-status-new-pastel: #969ba3; /* ink family, lightened for legibility as a fill */
+  --color-status-contacted-pastel: #2E6F40; /* saffron */
+  --color-status-qualified-pastel: #a8cdb8; /* light mint */
+  --color-status-converted-pastel: #6faf91; /* mint */
+  --color-status-lost-pastel: #c9675b; /* brick */
+
+  /* Dark brand panel - used only for the auth screen's marketing-style side
+     panel, a deliberately distinct "marketing moment" from the light app
+     chrome elsewhere. */
+  --color-brand-panel-bg: #20242b;
+  --color-brand-panel-surface: #2b2f37;
+  --color-brand-panel-text: #f7f6f2;
+  --color-brand-panel-text-soft: #9a9ea6;
+  --color-brand-panel-accent: #2E6F40;
+}
+
+@theme inline {
+  --color-paper: var(--color-paper);
+  --color-surface: var(--color-surface);
+  --color-ink: var(--color-ink);
+  --color-ink-soft: var(--color-ink-soft);
+  --color-ink-faint: var(--color-ink-faint);
+  --color-border: var(--color-border);
+  --color-border-strong: var(--color-border-strong);
+  --color-accent: var(--color-accent);
+  --color-accent-hover: var(--color-accent-hover);
+  --color-accent-soft: var(--color-accent-soft);
+  --color-accent-pastel: var(--color-accent-pastel);
+  --color-saffron: var(--color-saffron);
+  --color-saffron-hover: var(--color-saffron-hover);
+  --color-saffron-soft: var(--color-saffron-soft);
+  --color-badge-neutral: var(--color-badge-neutral);
+  --color-mint: var(--color-mint);
+  --color-mint-soft: var(--color-mint-soft);
+  --color-brick: var(--color-brick);
+  --color-brick-soft: var(--color-brick-soft);
+  --color-success: var(--color-success);
+  --color-success-soft: var(--color-success-soft);
+  --color-danger: var(--color-danger);
+  --color-danger-soft: var(--color-danger-soft);
+  --color-status-new: var(--color-status-new);
+  --color-status-new-soft: var(--color-status-new-soft);
+  --color-status-new-chart: var(--color-status-new-chart);
+  --color-status-contacted: var(--color-status-contacted);
+  --color-status-contacted-soft: var(--color-status-contacted-soft);
+  --color-status-contacted-chart: var(--color-status-contacted-chart);
+  --color-status-qualified: var(--color-status-qualified);
+  --color-status-qualified-soft: var(--color-status-qualified-soft);
+  --color-status-qualified-chart: var(--color-status-qualified-chart);
+  --color-status-converted: var(--color-status-converted);
+  --color-status-converted-soft: var(--color-status-converted-soft);
+  --color-status-converted-chart: var(--color-status-converted-chart);
+  --color-status-lost: var(--color-status-lost);
+  --color-status-lost-soft: var(--color-status-lost-soft);
+  --color-status-lost-chart: var(--color-status-lost-chart);
+  --color-status-new-pastel: var(--color-status-new-pastel);
+  --color-status-contacted-pastel: var(--color-status-contacted-pastel);
+  --color-status-qualified-pastel: var(--color-status-qualified-pastel);
+  --color-status-converted-pastel: var(--color-status-converted-pastel);
+  --color-status-lost-pastel: var(--color-status-lost-pastel);
+  --color-brand-panel-bg: var(--color-brand-panel-bg);
+  --color-brand-panel-surface: var(--color-brand-panel-surface);
+  --color-brand-panel-text: var(--color-brand-panel-text);
+  --color-brand-panel-text-soft: var(--color-brand-panel-text-soft);
+  --color-brand-panel-accent: var(--color-brand-panel-accent);
+  --font-heading: var(--font-outfit);
+  --font-body: var(--font-plus-jakarta);
+  --font-brand: var(--font-syne);
+}
+
+body {
+  background: var(--color-paper);
+  color: var(--color-ink);
+  font-family: var(--font-body), ui-sans-serif, system-ui, sans-serif;
+}
+
+h1,
+h2,
+h3,
+.font-heading {
+  font-family: var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+  letter-spacing: -0.01em;
+}
+
+.font-brand {
+  font-family: var(--font-brand), var(--font-heading), ui-sans-serif, system-ui, sans-serif;
+}
