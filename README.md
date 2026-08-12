@@ -9,6 +9,7 @@ assignment (Next.js + TypeScript + Node.js + MongoDB).
 
 ## Contents
 
+- [Screenshots](#screenshots)
 - [Architecture](#architecture)
 - [Tech stack](#tech-stack)
 - [Data model](#data-model)
@@ -20,6 +21,19 @@ assignment (Next.js + TypeScript + Node.js + MongoDB).
 - [Error handling](#error-handling)
 - [Scalability considerations](#scalability-considerations)
 - [Setup & run](#setup--run)
+
+## Screenshots
+
+| | |
+|---|---|
+| **Dashboard** - stats, leads-by-status, conversion rate, 14-day trend | **Command palette (⌘K)** - quick navigation and lead search |
+| ![Dashboard](docs/screenshots/dashboard.png) | ![Command palette](docs/screenshots/command-palette.png) |
+| **Leads** - search, status/assignee filters, pagination | **Team** - role management (Admin/Manager/User) |
+| ![Leads list](docs/screenshots/leads-list.png) | ![Team](docs/screenshots/team.png) |
+
+**Lead detail** - notes, status update, and AI Generate Reply
+
+![AI generate reply](docs/screenshots/ai-generate-reply.png)
 
 ## Architecture
 
